@@ -5,38 +5,21 @@ Sort the results by highest to lowest values of creditLimit.
 State should not contain null values
 credit limit should be between 50000 and 100000 */
 
-DESC CUSTOMERS;
-SELECT * FROM CUSTOMERS;
-
-SELECT customerNumber, customerName, state, creditLimit
-FROM customers
-WHERE state IS NOT NULL
-AND creditLimit BETWEEN 50000 AND 100000
-ORDER BY creditLimit DESC;
+select customerNumber,customerName,state,creditLimit from customers 
+where state is not null and creditLimit between 50000 and 100000 
+order by creditLimit desc;
 ------------------------------------------------------------------------------------------------------------------------------
 -- DAY 3
 /* Q. 2)	Show the unique productline values containing the word cars at the end from products table.*/
 
-SELECT * FROM PRODUCTS;
-SELECT DISTINCT productline
-FROM products
-WHERE productline LIKE '%cars';
+select distinct(productline) from productlines where productLine like "%cars";
 -------------------------------------------------------------------------------------------------------------------
 
 -- DAY 4
 /* 1)	Show the orderNumber, status and comments from orders table for shipped status only. 
 If some comments are having null values then show them as “-“. */
 
-SELECT * FROM ORDERS;
-
-SELECT ORDERNUMBER, STATUS, COALESCE(COMMENTS, '_') AS COMMENTS FROM ORDERS;
--- OR --
-SELECT ORDERNUMBER, STATUS, 
-       CASE
-           WHEN COMMENTS IS NULL THEN "_"
-           ELSE COMMENTS
-       END AS COMMENTS
-FROM ORDERS;
+select ordernumber,status,ifnull(comments,"-") as "comments" from orders where status="shipped";
 -------------------------------------------------------------------------------------------------------------------------
 -- DAY 4
 /* 2)	Select employee number, first name, job title and job title abbreviation from employees table based on following conditions.
@@ -46,68 +29,37 @@ If job title is one among the below conditions, then job title abbreviation colu
 ●	Sales Rep then “SR”
 ●	Containing VP word then “VP” */
 
-SELECT * FROM EMPLOYEES;
-SELECT employeeNumber, firstName, jobTitle,
-CASE
-WHEN JOBTITLE='PRESIDENT' THEN 'P'
-WHEN JOBTITLE LIKE 'SALES MANAGER %' OR JOBTITLE LIKE 'SALE MANAGER %' THEN 'SM'
-WHEN JOBTITLE='SALES REP' THEN 'SR'
-WHEN JOBTITLE LIKE '%VP%' THEN 'VP'
-ELSE null
-END AS JOBTITLE_ABBREVATION
-FROM EMPLOYEES;
+select employeenumber, firstname,jobtitle,
+case 
+when jobtitle ="President" then "P"
+when jobtitle like "Sales Manager%" or jobtitle like "Sale Manager%" then "SM"
+when jobtitle like "Sales Rep" then "SP"
+when jobtitle like "%VP%" then "VP"
+end jobtitleabbreviation  from employees
+order by jobtitle;
 --------------------------------------------------------------------------------------------------------------------------
 
 -- DAY 5
 /* Q.payments1)	For every year, find the minimum amount value from payments table.*/
 
-SELECT YEAR(paymentdate) AS year, MIN(amount) AS min_amount
-FROM payments
-GROUP BY YEAR(paymentdate);
+select year(paymentdate) as "Year",min(amount) as "MinAmount" from payments group by year(paymentdate) order by year(paymentdate);
 -------------------------------------------------------------------------------------------------------------------------
 -- DAY 5
 /* Q.2)	For every year and every quarter, find the unique customers and total orders from orders table. 
 Make sure to show the quarter as Q1,Q2 etc.*/
-select * from orders;
-SELECT 
-    year,
-    quarter,
-    COUNT(DISTINCT customerNumber) AS uniquecustomer,
-    COUNT(orderNumber) AS total_orders
-FROM (SELECT YEAR(orderdate) AS year,
-        CONCAT('Q', QUARTER(orderdate)) AS quarter, ordernumber,customernumber
-    FROM 
-        orders) AS subquery
-GROUP BY year,quarter;
 
--- OR
-
-SELECT 
-    year,
-    quarter,
-    COUNT(DISTINCT customerNumber) AS uniquecustomer,
-    COUNT(orderNumber) AS total_orders
-FROM (SELECT YEAR(orderdate) AS year,
-      QUARTER(orderdate) AS quarter, ordernumber,customernumber
-    FROM 
-        orders) AS subquery
-GROUP BY year,quarter;
+select year(orderdate) as "Year",concat("Q",quarter(orderdate)) as "Quarter", 
+count(distinct customernumber) as "Uniquecustomers",count(*) as "totalOrders" from orders
+group by year(orderdate),concat("Q",quarter(orderdate));
 --------------------------------------------------------------------------------------------------------------------
 -- DAY 5
 /*3)	Show the formatted amount in thousands unit (e.g. 500K, 465K etc.) for every month (e.g. Jan, Feb etc.) 
 with filter on total amount as 500000 to 1000000. Sort the output by total amount in descending mode. [ Refer. Payments Table]*/
-SELECT * FROM PAYMENTS;
-SELECT 
-    DATE_FORMAT(paymentdate, '%b') AS month, -- %b - function to extract and format the month name from a date value
-    concat(FORMAT(SUM(amount) / 1000, 0), 'K') AS formatted_amount
-FROM 
-		payments
-GROUP BY 
-    month
-HAVING 
-    SUM(amount) BETWEEN 500000 AND 1000000
-ORDER BY 
-    SUM(amount) DESC;
+SELECT DATE_FORMAT(paymentDate, '%b') AS "Month",CONCAT(FORMAT(SUM(amount) / 1000, 0), 'K') AS "Amount"
+FROM payments
+GROUP BY DATE_FORMAT(paymentDate, '%b')
+HAVING SUM(amount) BETWEEN 500000 AND 1000000
+ORDER BY SUM(amount) DESC;
 ---------------------------------------------------------------------------------------------------------------------------------
 -- DAY 6
 /* 1)	Create a journey table with following fields and constraints.
@@ -118,14 +70,13 @@ ORDER BY
 ●	Destination (No null values)
 ●	Email (must not contain any duplicates) */
 
-CREATE TABLE journey (
-    Bus_ID INT NOT NULL PRIMARY KEY,
-    Bus_Name VARCHAR(50) NOT NULL,
-    Source_Station VARCHAR(50) NOT NULL,
-    Destination VARCHAR(50) NOT NULL,
-    Email VARCHAR(50) NOT NULL UNIQUE);
-SELECT * FROM JOURNEY;
-DESC JOURNEY;
+create table journey (
+Bus_ID int Not null,
+Bus_Name varchar(50) Not null,
+Source_Station varchar(50) Not null,
+Destination varchar(50) Not null,
+Email varchar(100) unique
+);
 -------------------------------------------------------------------------------------------------------------------------------------------
 /* 2)	Create vendor table with following fields and constraints.
 ●	Vendor_ID (Should not contain any duplicates and should not be null)
@@ -133,13 +84,12 @@ DESC JOURNEY;
 ●	Email (must not contain any duplicates)
 ●	Country (If no data is available then it should be shown as “N/A”) */
 
-CREATE TABLE vendor (
-    Vendor_ID INT NOT NULL PRIMARY KEY,
-    Name VARCHAR(50) NOT NULL,
-    Email VARCHAR(50) NOT NULL UNIQUE,
-    Country VARCHAR(50) DEFAULT 'N/A');
-SELECT * FROM VENDOR;
-DESC VENDOR;
+create table vendor(
+Vendor_ID int unique not null,
+Name varchar(100) Not null,
+Email varchar(100) unique,
+Country varchar(100) default "N/A"
+);
 ----------------------------------------------------------------------------------------------------------------------------------
 /*   3)	Create movies table with following fields and constraints.
 ●	Movie_ID (Should not contain any duplicates and should not be null)
@@ -149,15 +99,14 @@ DESC VENDOR;
 ●	Gender (Either Male/Female)
 ●	No_of_shows (Must be a positive number) */
 
-CREATE TABLE movies (
-    Movie_ID INT NOT NULL PRIMARY KEY,
-    Name VARCHAR(50) NOT NULL,
-    Release_Year VARCHAR(20) DEFAULT '-',
-    Cast VARCHAR(50) NOT NULL,
-    Gender ENUM('Male', 'Female'),-- ENUM --ENUMERATED TYPE-Gender column can only have one of the two values: 'Male' or 'Female'.
-    No_of_shows INT CHECK (No_of_shows > 0));
-SELECT * FROM MOVIES;
-DESC MOVIES;
+Create table movies(
+Movie_ID varchar(100) unique not null,
+Name varchar(100) not null,
+Release_Year varchar(4) default '-',
+Cast varchar(100) not null,
+Gender varchar(6),
+No_of_shows int check(No_of_shows>=0)
+);
 --------------------------------------------------------------------------------------------------------------------------------
   /* 4)	Create the following tables. Use auto increment wherever applicable
 a. Product
@@ -166,129 +115,70 @@ a. Product
 ✔	description
 ✔	supplier_id - foreign key of supplier table*/
 
-CREATE TABLE Product (
-    product_id INT AUTO_INCREMENT PRIMARY KEY,
-    product_name VARCHAR(255) NOT NULL UNIQUE,
-    description TEXT,
-    supplier_id INT,
-    FOREIGN KEY (supplier_id) REFERENCES Suppliers(supplier_id));  ----- 2ND STEP
-SELECT * FROM PRODUCT;
-DESC PRODUCT;
 
 /*b. Suppliers
 ✔	supplier_id - primary key
 ✔	supplier_name
 ✔	location*/
 
-CREATE TABLE Suppliers (
-    supplier_id INT AUTO_INCREMENT PRIMARY KEY,
-    supplier_name VARCHAR(255),
-    location VARCHAR(255)); ---- 1ST STEP
-SELECT * FROM SUPPLIERS;
-DESC SUPPLIERS;
 
 /*c. Stock
 ✔	id - primary key
 ✔	product_id - foreign key of product table
 ✔	balance_stock*/
 
-CREATE TABLE Stock (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    product_id INT,
-    balance_stock INT,
-    FOREIGN KEY (product_id) REFERENCES Product(product_id));
-SELECT * FROM STOCK;
-DESC STOCK;
+create table suppliers(
+supplier_id int auto_increment primary key,
+supplier_name varchar(100) not null,
+location varchar(100)
+);
+create table Product(
+product_id int auto_increment primary key,
+product_name varchar(100) unique not null,
+description varchar(100),
+supplier_id int not null,
+foreign key(supplier_id) references suppliers(supplier_id)
+);
+create table stock(
+id int auto_increment primary key,
+product_id int not null,
+foreign key(product_id) references Product(product_id),
+balance_stock int not null
+);
 -----------------------------------------------------------------------------------------------------------------------------------
 -- DAY 7
 /*1)	Show employee number, Sales Person (combination of first and last names of employees), unique customers for each employee number 
 and sort the data by highest to lowest unique customers.
 Tables: Employees, Customers */
-DESC EMPLOYEES;
-DESC CUSTOMERS;
-SELECT * FROM EMPLOYEES;
-SELECT * FROM CUSTOMERS;
-
-SELECT      
-    e.employeeNumber AS employee_number,     
-    CONCAT(e.firstName, ' ', e.lastName) AS Sales_Person,     
-    COUNT(DISTINCT c.customerNumber) AS unique_customers 
-FROM      
-    Employees e 
-LEFT JOIN      
-    Customers c ON e.employeeNumber = c.salesRepEmployeeNumber 
-GROUP BY      
-    e.employeeNumber, Sales_Person 
-ORDER BY      
-    unique_customers DESC;
+select employeenumber,concat(e.firstname," ",e.lastname) as "salesperson",count(distinct(customernumber)) as "Unique_customers"
+from employees e inner join customers c
+on e.employeeNumber=c.salesRepEmployeeNumber
+group by employeeNumber,e.firstname,e.lastname
+order by Unique_Customers DESC;
 -------------------------------------------------------------------------------------------------------------------------------------------
 /*2)	Show total quantities, total quantities in stock, left over quantities for each product and each customer. 
 Sort the data by customer number.
 Tables: Customers, Orders, Orderdetails, Products*/
 
-SELECT * FROM CUSTOMERS;
-SELECT * FROM ORDERS;
-SELECT * FROM ORDERDETAILS;
-SELECT * FROM PRODUCTS;
-
-SELECT
-    c.customerNumber,
-    c.customerName,
-    p.productCode,
-    p.productName,
-    SUM(od.quantityOrdered) AS total_quantities_ordered,
-    SUM(p.quantityInStock) AS total_quantities_in_stock,
-    SUM(p.quantityInStock) - SUM(od.quantityOrdered) AS leftover_quantities
-FROM
-    Customers c
-INNER JOIN
-    Orders o ON c.customerNumber = o.customerNumber
-INNER JOIN
-    Orderdetails od ON o.orderNumber = od.orderNumber
-INNER JOIN
-    Products p ON od.productCode = p.productCode
-GROUP BY
-    c.customerNumber,
-    c.customerName,
-    p.productCode,
-    p.productName
-ORDER BY
-    c.customerNumber;
+select customernumber,customername,productcode,productname,
+sum(quantityordered) as "ordered_quantity",sum(quantityinstock) as "Total_inventory",
+(sum(quantityinstock)-sum(quantityordered)) as "left_qty"
+from customers c join orders o using (customerNumber)
+join orderdetails d using (orderNumber)
+join products p using (productCode)
+group by customerNumber,customerName,productcode,productName
+order by customerNumber;
 -------------------------------------------------------------------------------------------------------------------------------------------
 /*3)	Create below tables and fields. (You can add the data as per your wish)
 ●	Laptop: (Laptop_Name)
 ●	Colours: (Colour_Name)
 Perform cross join between the two tables and find number of rows.*/
 -- Create the Laptop table
-CREATE TABLE Laptop (
-    Laptop_Name VARCHAR(50) PRIMARY KEY);
--- Create the Colours table
-CREATE TABLE Colours (
-    Colour_Name VARCHAR(50) PRIMARY KEY);
-
--- Insert sample data into the Laptop table
-INSERT INTO Laptop (Laptop_Name) VALUES
-    ('LENOVO'),
-    ('DELL'),
-    ('HP');
-SELECT * FROM LAPTOP;
-
--- Insert sample data into the Colours table
-INSERT INTO Colours (Colour_Name) VALUES
-    ('Red'),
-    ('Blue'),
-    ('Green');
-SELECT * FROM COLOURS;
-
--- Perform a cross join between the Laptop and Colours tables
-SELECT Laptop.Laptop_Name, Colours.Colour_Name
-FROM Laptop
-CROSS JOIN Colours;
-
--- Count rows
-SELECT COUNT(*) AS total_rows
-FROM Laptop
-CROSS JOIN Colours;
+create table laptop(laptop_name varchar(10));
+insert into laptop values("Dell"),("HP");
+create table colors(color_name varchar(10));
+insert into colors values("White"),("Silver"),("Black");
+select * from laptop cross join colors order by laptop_name;
 -----------------------------------------------------------------------------------------------------------------------------------------------
 /* 4)	Create table project with below fields.
 ●	EmployeeID
@@ -306,28 +196,20 @@ INSERT INTO Project VALUES(7, 'Hina', 'Female', 3);
 Find out the names of employees and their related managers.*/
 
 -- Create the project table
-CREATE TABLE project (
-    EmployeeID INT,
-    FullName VARCHAR(50),
-    Gender VARCHAR(10),
-    ManagerID INT);
--- Insert data into the project table
-INSERT INTO project VALUES(1, 'Pranaya', 'Male', 3),
-(2, 'Priyanka', 'Female', 1),
-(3, 'Preety', 'Female', NULL),
-(4, 'Anurag', 'Male', 1),
-(5, 'Sambit', 'Male', 1),
-(6, 'Rajesh', 'Male', 3),
-(7, 'Hina', 'Female', 3);
-select * from project;
-
-SELECT 
-   m.FullName AS ManagerName,
-   e.FullName AS EmployeeName
-FROM 
-    project AS e
-LEFT JOIN 
-    project AS m ON e.ManagerID = m.EmployeeID;
+create table project(
+EmployeeID int not null,
+FullName varchar(50),
+Gender varchar(6),
+ManagerID int);
+INSERT INTO Project VALUES(1, 'Pranaya', 'Male', 3);
+INSERT INTO Project VALUES(2, 'Priyanka', 'Female', 1);
+INSERT INTO Project VALUES(3, 'Preety', 'Female', NULL);
+INSERT INTO Project VALUES(4, 'Anurag', 'Male', 1);
+INSERT INTO Project VALUES(5, 'Sambit', 'Male', 1);
+INSERT INTO Project VALUES(6, 'Rajesh', 'Male', 3);
+INSERT INTO Project VALUES(7, 'Hina', 'Female', 3);
+select m.fullname as "managername",e.fullname as "empname" from project e join project m
+on e.managerid=m.employeeid;
 --------------------------------------------------------------------------------------------------------------------------------------------
 -- DAY 8
 /* Create table facility. Add the below fields into it.
@@ -336,21 +218,18 @@ LEFT JOIN
 ●	State
 ●	Country*/
 
-CREATE TABLE facility (
-    Facility_ID INT ,
-    Name VARCHAR(50) ,
-    State VARCHAR(50),
-    Country VARCHAR(50));
-    DESC FACILITY;
 /* i) Alter the table by adding the primary key and auto increment to Facility_ID column.*/
-ALTER TABLE facility
-MODIFY COLUMN Facility_ID INT AUTO_INCREMENT PRIMARY KEY;
- DESC FACILITY;
  
  /* ii) Add a new column city after name with data type as varchar which should not accept any null values.*/
-ALTER TABLE facility
-ADD COLUMN city VARCHAR(50) NOT NULL AFTER Name;
- DESC FACILITY;
+create table facility(
+Facility_ID int not null,
+Name varchar(100),
+State varchar(100),
+Country varchar(100)
+);
+alter table facility modify Facility_id int auto_increment primary key;
+alter table facility add City varchar(100) not null after name;
+describe facility;
 ------------------------------------------------------------------------------------------------------------------------------------------
 -- DAY 9
 /* Create table university with below fields.
@@ -364,31 +243,33 @@ VALUES (1, "       Pune          University     "),
               (4, "Madras University"),
               (5, "Nagpur University"); */
 -- Create the university table
-CREATE TABLE University (
-    ID INT,
-    Name VARCHAR(50));
-DESC UNIVERSITY;
--- Insert data into the university table
-INSERT INTO University (ID, Name)
-VALUES 
-    (1, '       Pune          University     '), 
-    (2, '  Mumbai          University     '),
-    (3, '     Delhi   University     '),
-    (4, 'Madras University'),
-    (5, 'Nagpur University');
-SELECT * FROM UNIVERSITY;
-
 /*Remove the spaces from everywhere and update the column like Pune University etc.*/
 SET SQL_SAFE_UPDATES=0;
 -- Remove extra spaces from the university names
-UPDATE University
-SET Name = TRIM(REPLACE(Name, '   ', ' '));
-SELECT * FROM University;
+create table university(
+ID int not null,
+Name varchar(100) not null);
+INSERT INTO University
+VALUES (1, "       Pune          University     "), 
+               (2, "  Mumbai          University     "),
+              (3, "     Delhi   University     "),
+              (4, "Madras University"),
+              (5, "Nagpur University");
+update university
+set name=trim(replace(name,"  "," "));
+select * from university;
 -------------------------------------------------------------------------------------------------------------
--- DAY 10 NEED HELP
+-- DAY 10
 /* Create the view products status. Show year wise total products sold. 
 Also find the percentage of total value for each year.*/
 
+CREATE VIEW products_status AS SELECT YEAR(o.orderDate) AS Year,
+CONCAT( count(od.priceEach), ' (', ROUND((SUM(od.priceEach * od.quantityOrdered) / (SELECT SUM(od2.priceEach * od2.quantityOrdered)
+FROM OrderDetails od2)) * 100), '%)' ) AS Value
+FROM Orders o JOIN OrderDetails od ON o.orderNumber = od.orderNumber
+GROUP BY Year
+ORDER BY Value desc; 
+select * from products_status;
 ---------------------------------------------------------------------------------------------------------------
 -- DAY 11
 /*1)	Create a stored procedure GetCustomerLevel which takes input as customer number and gives the output 
@@ -397,55 +278,52 @@ Table: Customers
 ●	Platinum: creditLimit > 100000
 ●	Gold: creditLimit is between 25000 to 100000
 ●	Silver: creditLimit < 25000*/
-select * from customers;
-DELIMITER //
-CREATE DEFINER=`root`@`localhost` PROCEDURE `GetCustomerLevel`(IN customer_number INT)
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetCustomerLevel`(cnum int)
 BEGIN
-
-    DECLARE customer_level VARCHAR(20);
-
-    SELECT 
-        CASE 
-            WHEN creditLimit > 100000 THEN 'Platinum'
-            WHEN creditLimit BETWEEN 25000 AND 100000 THEN 'Gold'
-            ELSE 'Silver'
-        END INTO customer_level
-    FROM 
-        Customers 
-    WHERE 
-        customerNumber = customer_number;
-
-    SELECT customer_level AS Customer_Level;
-END //
-DELIMITER 
+  DECLARE customer_level VARCHAR(10);
+  SELECT 
+    CASE 
+      WHEN creditLimit > 100000 THEN 'Platinum'
+      WHEN creditLimit BETWEEN 25000 AND 100000 THEN 'Gold'
+      ELSE 'Silver'
+    END AS customer_level
+  FROM Customers
+  WHERE customernumber = cnum;
+END$$
+DELIMITER ;
 ----------------------------------------------------------------------------------------------------------
 /*2)Create a stored procedure Get_country_payments which takes in year and country as inputs and 
 gives year wise, country wise total amount as an output. Format the total amount to nearest thousand unit (K)
 Tables: Customers, Payments*/
 select * from customers;
 select * from payments;
-DELIMITER //
-CREATE DEFINER=`root`@`localhost` PROCEDURE `Get_country_payments`(IN input_year INT, IN input_country VARCHAR(255))
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `Get_country_payments`(IN input_year INT,  IN input_country VARCHAR(255))
 BEGIN
-    SELECT 
-        YEAR(paymentDate) AS Year,
-        Country,
-        CONCAT(FORMAT(SUM(amount) / 1000, 0), 'K') AS Total_Amount
-    FROM 
-        Payments
-    JOIN 
-        Customers ON Payments.customerNumber = Customers.customerNumber
-    WHERE 
-        YEAR(paymentDate) = input_year AND Customers.country = input_country
-    GROUP BY 
-        Year, Country;
-END //
-DELIMITER 
+  DECLARE total_amount DECIMAL(10,2);
+  SELECT 
+    YEAR(p.paymentdate) AS payment_year,
+    c.country,
+    CONCAT(FORMAT(SUM(amount)/1000, 0),'K') AS Total_Amount
+  FROM Payments p
+  JOIN Customers c ON p.customernumber = c.customernumber
+  WHERE YEAR(p.paymentdate) = input_year
+    AND c.country = input_country
+  GROUP BY YEAR(p.paymentdate), c.country
+  ORDER BY YEAR(p.paymentdate), c.country;
+END$$
+DELIMITER ;
 ------------------------------------------------------------------------------------------------------------
--- DAY 12 NEED HELP
+-- DAY 12
 /*1)	Calculate year wise, month name wise count of orders and year over year (YoY) percentage change. 
 Format the YoY values in no decimals and show in % sign.
 Table: Orders*/
+(incomplete)
+select * from orders;
+select year(orderdate),monthname(orderdate),count(ordernumber),
+lag(count(orderdate)) over (order by year(orderdate)) as "%YoY Change" from orders
+group by year(orderdate),monthname(orderdate);
 ----------------------------------------------------------------------------------------------------------------
 /*2)	Create the table emp_udf with below fields.
 ●	Emp_ID
@@ -457,43 +335,28 @@ VALUES ("Piyush", "1990-03-30"), ("Aman", "1992-08-15"), ("Meena", "1998-07-28")
 ("Sanjay", "1995-05-21");*/
 
 -- Create the emp_udf table
-CREATE TABLE emp_udf (
-    Emp_ID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(50),
-    DOB DATE);
-
 -- Insert data into emp_udf table
-INSERT INTO emp_udf (Name, DOB)
-VALUES 
-    ("Piyush", "1990-03-30"),
-    ("Aman", "1992-08-15"),
-    ("Meena", "1998-07-28"),
-    ("Ketan", "2000-11-21"),
-    ("Sanjay", "1995-05-21");
-SELECT * FROM emp_udf;
-
 /*Create a user defined function calculate_age which returns the age in years and months (e.g. 30 years 5 months)
  by accepting DOB column as a parameter.*/
 
-DELIMITER//
-CREATE DEFINER=`root`@`localhost` FUNCTION `calculate_age`(date_of_birth DATE) RETURNS varchar(50) CHARSET latin1
+create table Emp_UDF(Emp_ID int auto_increment primary key,Name varchar(20),DOB date);
+INSERT INTO Emp_UDF(Name, DOB)
+VALUES ("Piyush", "1990-03-30"), ("Aman", "1992-08-15"), ("Meena", "1998-07-28"), ("Ketan", "2000-11-21"), ("Sanjay", "1995-05-21");
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` FUNCTION `Age`(dob date) RETURNS varchar(20) CHARSET latin1
 BEGIN
-    DECLARE years INT;
-    DECLARE months INT;
-    DECLARE age_string VARCHAR(50);
+  DECLARE today DATE;
+  DECLARE years INT;
+  DECLARE months INT;
+    SET today = CURDATE();
 
-    -- Calculate age in years
-    SET years = TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE());
+  SET years = YEAR(today) - YEAR(dob) - ((MONTH(today), DAY(today)) < (MONTH(dob), DAY(dob)));
+  SET months = (MONTH(today) - MONTH(dob) + 12) % 12 + IF(DAY(today) >= DAY(dob), 1, 0);
 
-    -- Calculate age in months
-    SET months = TIMESTAMPDIFF(MONTH, date_of_birth, CURDATE()) - years * 12;
-
-    -- Construct age string
-    SET age_string = CONCAT(years, ' years ', months, ' months');
-
-    RETURN age_string;
-END// 
-DELIMITER 
+  RETURN CONCAT(years, ' years ', months, ' months');
+END$$
+DELIMITER ;
+select age(dob) from Emp_udf;
 ---------------------------------------------------------------------------------------------------------------
 -- Day 13
 /*1)	Display the customer numbers and customer names from customers table who have not placed any orders using 
@@ -508,10 +371,27 @@ WHERE customerNumber NOT IN (
 ----------------------------------------------------------------------------------------------------------------
 /*2)	Write a full outer join between customers and orders using union and get the customer number, 
 customer name, count of orders for every customer.Table: Customers, Orders*/
--- FULL OUTER JOIN ERROR CODE 1064
+
+select * from customers;
+select * from Orders;
+SELECT c.customernumber,
+       c.customername,
+       COUNT(o.ordernumber) AS order_count
+FROM Customers c
+LEFT JOIN Orders o ON c.customernumber = o.customernumber
+GROUP BY c.customernumber, c.customername
+UNION
+SELECT c.customernumber,
+       c.customername,
+       COUNT(o.ordernumber) AS Total_orders
+FROM Orders o
+LEFT JOIN Customers c ON c.customernumber = o.customernumber
+GROUP BY c.customernumber, c.customername;
+
 ----------------------------------------------------------------------------------------------------------------
 /*3)	Show the second highest quantity ordered value for each order number.
 Table: Orderdetails */
+
 SELECT
     orderNumber,
     MAX(quantityOrdered) AS second_highest_quantity
@@ -527,14 +407,16 @@ WHERE
             od.orderNumber = Orderdetails.orderNumber)
 GROUP BY
     orderNumber;
+
 ------------------------------------------------------------------------------------------------------------------
 /*4)	For each order number count the number of products and then find the min and max of the values among 
 count of orders.
 Table: Orderdetails*/
+
 SELECT * FROM ORDERDETAILS;
 SELECT
-    MIN(product_count) AS min_product_count,
-    MAX(product_count) AS max_product_count
+	MAX(product_count) AS "max(total)",
+    MIN(product_count) AS "min(total)"
 FROM
     (SELECT
             orderNumber,
@@ -549,7 +431,7 @@ buy price value. Show the output as product line and its count.*/
 SELECT * FROM PRODUCTS;
 SELECT
     productLine,
-    COUNT(*) AS tot_count
+    COUNT(*) AS total
 FROM
     products
 WHERE
